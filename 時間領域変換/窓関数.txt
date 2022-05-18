@@ -1,0 +1,13 @@
+%*****  IFFT condition ************
+f_num=R;
+start_win=556;
+stop_win=R+1;
+f_win=stop_win - start_win;
+fft_num=8192*2;
+dt0=1/fft_num/1e6;
+t0=(dt0:dt0:dt0*fft_num)';
+t0n=t0*1e9;
+w0=zeros(f_num,1);
+w_ham=hamming(f_win+1);
+w0(start_win:stop_win)=w_ham(1:f_win+1);
+t00=(1:1:8192*2);

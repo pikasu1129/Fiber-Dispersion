@@ -2,6 +2,7 @@ import sympy as sy
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import random
 
 L = 0.1 #(km)
 bit = 25
@@ -16,7 +17,7 @@ y = 38.25 * 10 ** -3 #(mm)
 
 total  = (y / c) * (nm + ng) #(s)
 initial = 1000
-pitch = 50 * 10 ** -6 #(nm)
+pitch = 50 * 10 ** -6 #(um)
 pitchmm =  pitch * 10 ** 3
 dt = pitch * (nm + ng) / c
 sumw = (total + dt * initial) / dt
@@ -24,3 +25,14 @@ sumw = (total + dt * initial) / dt
 polnumber = 1 + int(sumw) - initial
 electrodelength = pitch * polnumber
 elecctrodelengthmm = electrodelength * 10 ** 3
+
+#28GHzの信号を変調を生成
+
+digital = []
+
+for n in range(0,bit):
+    digital[n] = random.randint(0,1)
+
+print(digital[0])
+
+
