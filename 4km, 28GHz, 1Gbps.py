@@ -34,10 +34,11 @@ elecctrodelengthmm = electrodelength * 10 ** 3
 #時間tを生成
 
 t = np.arange(0, bit * 25, 24)
+t = np.arange(0, bit * 25 * 10 ** -12, 10 ** -12)
 
 digital = []
 stepram = []
-for n in np.arange(0, bit * 25, 24):
+for n in np.arange(0, bit * 25 * 10 ** -12, 10 ** -12):
     rm = random.randint(0,1)
     digital.append(rm)
 
@@ -46,18 +47,26 @@ print(digital)
 #x = np.arange(0, 24)
 y = digital
 
-plt.rcParams["font.size"] = 18
-plt.rcParams["font.family"] = "Bold"
-
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
 ax.step(t, y, color = 'Red')
+
+
+#28GHzの搬送波生成
+
+t1 = np.arange(0, 600)
+f = 28 * 10 ** 9 #(Hz)搬送波周波数
+signal1 = np.cos(2 * np.pi * f * t1 * 10 ** -12)
+print(signal1)
+#signal2 = digital * signal1
+
+ax.plot(t1, signal1, color = 'Red')
 
 ax.set_ylabel("Power")
 ax.set_xlabel("Time[ps]")
 #ax.set_xticklabels([0, 100, 200, 300, 400, 500, 600])
 plt.show()
 
-f = 28 * 10 ** 3 #(Hz)
-signal = math.cos(2 * math.pi * f)
+#搬送波600ポイント　データも600ポイントにする
+
