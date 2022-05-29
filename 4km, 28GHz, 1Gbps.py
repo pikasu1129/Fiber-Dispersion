@@ -55,12 +55,12 @@ ax.step(t, y, color = 'Blue')
 #28GHzの搬送波生成
 
 t1 = np.arange(0, bit * 25 * 1e-12, 25 * 1e-12)
-f = 28 * 1e9 #(Hz)搬送波周波数
+f = 28 * 1e12 #(Hz)搬送波周波数
 signal1 = 0.5 * (1 + np.cos(2 * np.pi * f * t1))
 
 signal2 = digital * signal1
 
-ax.plot(t, signal2, color = 'Red')
+ax.plot(t, signal1, color = 'Red')
 
 ax.set_ylabel("Power")
 ax.set_xlabel("Time[ps]")
