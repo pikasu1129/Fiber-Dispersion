@@ -4,6 +4,7 @@ import dask.array as da
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import scipy as scy
+import sympy as sp
 import threading,time
 import multiprocessing
 import sys
@@ -11,13 +12,14 @@ import bitarray
 import cmath
 
 from scipy.fftpack import fft
-from numpy import e, pi
+from numpy import e, pi, real
 from numpy import sqrt
 from numpy import sin
 from numpy import cos
 from numpy import zeros
 from numpy import r_
 from scipy.io.wavfile import read as wavread
+from sympy import E, I
 
 plt.rcParams["font.size"] = 18
 
@@ -49,8 +51,8 @@ Nbits = 25                  # number of bits
 f0 = 30 * 10 ** 9          # carrier Frequency
 Ns = int(fs/baud)           # number of Samples per Symbol
 N = Nbits * Ns              # Total Number of Samples
-t = da.from_array(r_[0.0:N])            # time points float64
-f = da.from_array(r_[0:N/2.0])        # Frequency Points float64
+t = r_[0.0:N]            # time points float64
+f = r_[0:N/2.0]       # Frequency Points float64
 t = t.astype(np.float32)
 f = f.astype(np.float32)
 t = t/fs
@@ -81,13 +83,22 @@ dataSymbols = np.array([[GetBpskSymbol(inputBits[x])] for x in range(0,inputBits
 
 #Multiplicator / mixxer
 BPSK_signal = inputSignal*(carrier1) # + intermodulation1+ intermodulation2) float64
-BPSK_signal = BPSK_signal.astype(np.float16)
+#BPSK_signal = BPSK_signal.astype(np.float16)
 
 #---------- 信号の積分（光信号に変換？） ------------#
+f1, t1 = sp.symbols('f1, t1')
+fx = sp.exp(-I * 2 * pi * f1 * t1) #BPSK_signalを掛けるとエラーが発生し積分できない
+integ = sp.integrate(fx, (t1, 0, 25*10**-9))
+print(integ)
+integ = integ * BPSK_signal
+print(integ)
+print(np.imag(integ))
+print(integ[250])
+
+f1 = np.arange(0,25000)
 
 
+fig, axis = plt.subplots(1, 1)
+axis.plot(f1, integ)
 
-#---------- Sampling ------------#
-#fw1 = np.hanning(N)
-
-
+plt.show
