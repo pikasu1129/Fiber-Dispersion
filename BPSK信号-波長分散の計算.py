@@ -87,18 +87,18 @@ BPSK_signal = inputSignal*(carrier1) # + intermodulation1+ intermodulation2) flo
 
 #---------- 信号の積分（光信号に変換？） ------------#
 f1, t1 = sp.symbols('f1, t1')
-fx = sp.exp(-I * 2 * pi * f1 * t1) #BPSK_signalを掛けるとエラーが発生し積分できない
-integ = sp.integrate(fx, (t1, 0, 25*10**-9))
+
+fx = sp.exp(-sp.I * 2 * sp.pi * f1 * t1) #BPSK_signalを掛けるとエラーが発生し積分できない
+integ = sp.integrate(fx, (t1, 0, 25*10**-9), conds = 'none')
+
 print(integ)
-integ = integ * BPSK_signal
+print(integ.subs(f1,100))
+integ = (integ * BPSK_signal)
 print(integ)
-print(np.imag(integ))
-print(integ[250])
 
-f1 = np.arange(0,25000)
+print(integ.dtype)
 
+#f1 =np.arange(-12500, 12500)
+print(integ[250].subs(f1, 100))
 
-fig, axis = plt.subplots(1, 1)
-axis.plot(f1, integ)
-
-plt.show
+p1 = sp.plot(integ, (f1, -12500, 12500))
