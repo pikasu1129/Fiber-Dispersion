@@ -8,10 +8,10 @@ from numpy import r_
 #-------------------------------------#
 #---------- Configuration ------------#
 #-------------------------------------#
-fs = 1 * 10 ** 12                    # sampling rate
-baud = 1 * 10 ** 9                # symbol rate = bps?
+fs = 1 * 10 ** 12           # sampling rate
+baud = 1 * 10 ** 9          # symbol rate = bps?
 Nbits = 25                  # number of bits
-f0 = 30 * 10 ** 9                 # carrier Frequency
+f0 = 30 * 10 ** 9           # carrier Frequency
 Ns = int(fs/baud)           # number of Samples per Symbol
 N = Nbits * Ns              # Total Number of Samples
 t = r_[0.0:N]/fs            # time points

@@ -1,7 +1,9 @@
 # Import functions and libraries
+import scipy.signal as sig
 import numpy as np
-import dask.array as da
+import statsmodels.api as sm
 import matplotlib.pyplot as plt
+from IPython.core.display import display
 import matplotlib.gridspec as gridspec
 import scipy as scy
 import sympy as sp
@@ -21,9 +23,10 @@ from numpy import r_
 from scipy.io.wavfile import read as wavread
 from sympy import E, I
 
+# 強度変調信号の生成
 plt.rcParams["font.size"] = 18
 
-# シンボル生成、1bitの入力から十進数を返す
+# Used for symbol creation. Returns a decimal number from a 1 bit input
 def GetBpskSymbol(bit1:bool):
     if(~bit1):
         return 0
@@ -40,7 +43,6 @@ def BpskSymbolMapper(symbols:int,amplitude,noise1=0, noise2=0,  phaseOffset = 0)
         return amplitude*(cos(np.deg2rad(180) + phaseOffset)) + (noise1 + 1j*noise2)
     else:
         return complex(0)
-
 
 #-------------------------------------#
 #---------- Configuration ------------#
@@ -59,7 +61,7 @@ t = t/fs
 f = f/N*fs
 
 # Limit for representation of time domain signals for better visibility.
-symbolsToShow = 25          # グラフに表示される範囲 = bit数
+symbolsToShow = 25
 timeDomainVisibleLimit = np.minimum(Nbits/baud,symbolsToShow/baud)
 
 # Limit for representation of frequency domain signals for better visibility.
@@ -78,42 +80,60 @@ carrier1 = sin(2 * pi * f0 * t)
 inputBits = np.random.randn(Nbits,1) > 0
 
 #Digital-to-Analog Conversion
-inputSignal = (np.tile(inputBits*2-1,(1,Ns))).ravel() #int32
-dataSymbols = np.array([[GetBpskSymbol(inputBits[x])] for x in range(0,inputBits.size)]) #int32
+inputSignal = (np.tile(inputBits,(1,Ns))).ravel()
+dataSymbols = np.array([[GetBpskSymbol(inputBits[x])] for x in range(0,inputBits.size)])
 
 #Multiplicator / mixxer
-BPSK_signal = inputSignal*(carrier1) # + intermodulation1+ intermodulation2) float64
-#BPSK_signal = BPSK_signal.astype(np.float16)
+AM_signal = inputSignal*( carrier1)# + intermodulation1+ intermodulation2)
 
-#---------- 信号の積分（光信号に変換？） ------------#
-f1, t1 = sp.symbols('f1, t1')
+#---------- Preperation BPSK Constellation Diagram ------------#
 
-fx = sp.exp(-sp.I * 2 * sp.pi * f1 * t1) #BPSK_signalを掛けるとエラーが発生し積分できない
-integ = sp.integrate(fx, (t1, 0, 25*10**-9), conds = 'none')
+amplitude = 1
 
-print(integ)
-print(integ.subs(f1,100))
-integ = (integ * BPSK_signal)
-print(integ)
+#Generate noise. Two sources for uncorelated noise.
+noiseStandardDeviation = 0.12
+noise1 = np.random.normal(0,noiseStandardDeviation,dataSymbols.size)
+noise2 = np.random.normal(0,noiseStandardDeviation,dataSymbols.size)
 
-print(integ.dtype)
+#---------- Plot of amplitude modulated signal ------------#
+fig, axis = plt.subplots(3, 1)
+fig.suptitle('Modulation')
 
-#f1 =np.arange(-12500, 12500)
-#print(integ[250].subs(f1, 100))
+axis[0].plot(t, inputSignal, color='C1')
+axis[0].set_title('NRZ signal') # (Source Code/ Block Diagram: "inputSignal")
+axis[0].set_xlabel('Time [s]')
+axis[0].set_xlim(0,timeDomainVisibleLimit)
+axis[0].set_ylabel('Amplitude [V]')
+axis[0].grid(linestyle='dotted')
 
-#p1 = sp.plot(integ, (f1, -12500, 12500))
+axis[1].plot(t, carrier1, color='C2')
+axis[1].set_title('Carrier signal') # (Source Code/ Block Diagram: "carrier1")
+axis[1].set_xlabel('Time [s]')
+axis[1].set_xlim(0,timeDomainVisibleLimit)
+axis[1].set_ylabel('Amplitude [V]')
+axis[1].grid(linestyle='dotted')
 
-args = (f1)
-func = sp.lambdify(args, fx, "numpy")
-print(func,"",integ.dtype)
+axis[2].plot(t,AM_signal, color='C3')
+axis[2].set_title('Amplitude modulated signal') # (Source Code/ Block Diagram: "BPSK_signal")
+axis[2].set_xlabel('Time [s]')
+axis[2].set_xlim(0,timeDomainVisibleLimit)
+axis[2].set_ylabel('Amplitude [V]')
+axis[2].grid(linestyle='dotted')
 
-fig, axis = plt.subplots(1, 1)
+plt.subplots_adjust(hspace=0.6)
 
-f1 = np.arange(10^-3,10^3)
-f1 = f1.astype(np.float32)
-print(f1.dtype)
-axis.plot(f1, func(f1))
+
+#----- 相互相関関数の練習 -----#
+ACF = np.correlate(AM_signal, AM_signal, mode="same")
+print(ACF)
+# 正規化して最大値±１となるようにグラフを描いてみる
+
+fig, ax = plt.subplots()
+ax.plot(t, ACF, color='C1')
+ax.set_xlabel('Time [s]')
+ax.set_ylabel('Intensity')
+#fig.suptitle('BPSK Modulation', fontsize=18)
+
+# ax.set_title('Magnitude Spectrum (Source Code/ Block Diagram: "BPSK_signal")')
+
 plt.show()
-
-### Mathematicaにおける積分の式を再現しようとしたが、そのまま実装しようとするとエラーになる
-### BPSK_signalとexpを掛け合わせて積分できればいいが、うまくできないので考える必要がある
