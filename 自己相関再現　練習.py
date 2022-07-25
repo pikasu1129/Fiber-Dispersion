@@ -126,10 +126,15 @@ plt.subplots_adjust(hspace=0.6)
 #----- 相互相関関数の練習 -----#
 ACF = np.correlate(AM_signal, AM_signal, mode="same")
 print(ACF)
+print(np.amax(ACF))
+
+ACF_normalized = ACF / np.amax(ACF)
+print(ACF_normalized)
 # 正規化して最大値±１となるようにグラフを描いてみる
 
-fig, ax = plt.subplots()
-ax.plot(t, ACF, color='C1')
+fig, ax = plt.subplots(1, 1)
+# fig.suptitle('Auto  Correlation Function')
+ax.plot(t, ACF_normalized, color='C1')
 ax.set_xlabel('Time [s]')
 ax.set_ylabel('Intensity')
 #fig.suptitle('BPSK Modulation', fontsize=18)
