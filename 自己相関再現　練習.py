@@ -35,15 +35,6 @@ def GetBpskSymbol(bit1:bool):
     else:
         return -1
 
-    # Maps a given symbol to a complex signal. Optionally, noise and phase offset can be added.
-def BpskSymbolMapper(symbols:int,amplitude,noise1=0, noise2=0,  phaseOffset = 0):
-    if(symbols == 0):
-        return amplitude*(cos(np.deg2rad(0) + phaseOffset)) + (noise1 + 1j*noise2)
-    elif(symbols == 1):
-        return amplitude*(cos(np.deg2rad(180) + phaseOffset)) + (noise1 + 1j*noise2)
-    else:
-        return complex(0)
-
 #-------------------------------------#
 #---------- Configuration ------------#
 #-------------------------------------#
@@ -124,11 +115,14 @@ plt.subplots_adjust(hspace=0.6)
 
 
 #----- 相互相関関数の練習 -----#
-ACF = np.correlate(AM_signal, AM_signal, mode="same")
+'''
+ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
 print(ACF)
 print(np.amax(ACF))
+'''
 
-ACF_normalized = ACF / np.amax(ACF)
+ACF_normalized =  np.correlate(AM_signal, AM_signal, mode="same") / len(AM_signal)
+#ACF_normalized = ACF / np.amax(ACF)
 print(ACF_normalized)
 # 正規化して最大値±１となるようにグラフを描いてみる
 
