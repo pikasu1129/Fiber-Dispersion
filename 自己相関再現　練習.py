@@ -69,10 +69,11 @@ carrier1 = sin(2 * pi * f0 * t)
 
 # Modulator Input
 #inputBits = np.random.randn(Nbits,1) > 0
+# 生成するbitパターンを固定化する
 inputBits = np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
 inputBits = inputBits.reshape((25,1))
 
-#はじめから1bitずらした信号を生成して掛ける
+#はじめから1bitずらした信号を生成することで遅延を再現
 inputBits2 = np.insert(inputBits, 0, 0, axis=0)
 inputBits2 = np.delete(inputBits2, 25, 0)
 print(inputBits.shape, inputBits2.shape)
@@ -87,9 +88,30 @@ print(inputSignal.shape, inputSignal2.shape)
 AM_signal = inputSignal*( carrier1)# + intermodulation1+ intermodulation2)
 AM_signal2 = inputSignal2*( carrier1)
 
-#---------- Preperation BPSK Constellation Diagram ------------#
 
-amplitude = 1
+#----- 相互相関関数の練習 -----#
+'''
+ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
+print(ACF)
+print(np.amax(ACF))
+
+ACF = np.correlate(AM_signal, AM_signal2, mode='same')
+
+ACF_normalized = ACF / np.amax(ACF)
+# 正規化して最大値±１となるようにグラフを描いてみる
+
+fig, ax = plt.subplots(1, 1)
+# fig.suptitle('Auto  Correlation Function')
+print(ACF)
+ax.plot(t, ACF_normalized, color='C1')
+ax.set_xlabel('Time [s]')
+ax.set_ylabel('Intensity')
+#fig.suptitle('BPSK Modulation', fontsize=18)
+
+# ax.set_title('Magnitude Spectrum (Source Code/ Block Diagram: "BPSK_signal")')
+'''
+
+
 
 #---------- Plot of amplitude modulated signal ------------#
 fig, axis = plt.subplots(4, 1)
@@ -125,26 +147,4 @@ axis[3].grid(linestyle='dotted')
 
 plt.subplots_adjust(hspace=0.85)
 
-
-#----- 相互相関関数の練習 -----#
-'''
-ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
-print(ACF)
-print(np.amax(ACF))
-
-ACF = np.correlate(AM_signal, AM_signal2, mode='same')
-
-ACF_normalized = ACF / np.amax(ACF)
-# 正規化して最大値±１となるようにグラフを描いてみる
-
-fig, ax = plt.subplots(1, 1)
-# fig.suptitle('Auto  Correlation Function')
-print(ACF)
-ax.plot(t, ACF_normalized, color='C1')
-ax.set_xlabel('Time [s]')
-ax.set_ylabel('Intensity')
-#fig.suptitle('BPSK Modulation', fontsize=18)
-
-# ax.set_title('Magnitude Spectrum (Source Code/ Block Diagram: "BPSK_signal")')
-'''
 plt.show()
