@@ -13,18 +13,18 @@ import sys
 import bitarray
 import cmath
 
-from scipy.fftpack import fft
-from numpy import e, pi, real
+from scipy.fftpack import fft, ifft
+from numpy import e, ndarray, pi, real
 from numpy import sqrt
 from numpy import sin
 from numpy import cos
 from numpy import zeros
 from numpy import r_
 from scipy.io.wavfile import read as wavread
-from sympy import E, I
+from sympy import E, I, NDimArray
 
 # 強度変調信号の生成
-plt.rcParams["font.size"] = 18
+plt.rcParams["font.size"] = 17
 
 # Used for symbol creation. Returns a decimal number from a 1 bit input
 def GetBpskSymbol(bit1:bool):
@@ -38,7 +38,7 @@ def GetBpskSymbol(bit1:bool):
 #-------------------------------------#
 #---------- Configuration ------------#
 #-------------------------------------#
-fs = 1 * 10 ** 12           # sampling rate
+fs = 1 * 10 ** 12          # sampling rate
 baud = 1 * 10 ** 9          # symbol rate = bps?
 Nbits = 25                  # number of bits
 f0 = 30 * 10 ** 9          # carrier Frequency
@@ -68,26 +68,31 @@ carrier1 = sin(2 * pi * f0 * t)
 #----------------------------#
 
 # Modulator Input
-inputBits = np.random.randn(Nbits,1) > 0
+#inputBits = np.random.randn(Nbits,1) > 0
+inputBits = np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
+inputBits = inputBits.reshape((25,1))
+
+#はじめから1bitずらした信号を生成して掛ける
+inputBits2 = np.insert(inputBits, 0, 0, axis=0)
+inputBits2 = np.delete(inputBits2, 25, 0)
+print(inputBits.shape, inputBits2.shape)
 
 #Digital-to-Analog Conversion
 inputSignal = (np.tile(inputBits,(1,Ns))).ravel()
-dataSymbols = np.array([[GetBpskSymbol(inputBits[x])] for x in range(0,inputBits.size)])
+inputSignal2 = (np.tile(inputBits2,(1,Ns))).ravel()
+
+print(inputSignal.shape, inputSignal2.shape)
 
 #Multiplicator / mixxer
 AM_signal = inputSignal*( carrier1)# + intermodulation1+ intermodulation2)
+AM_signal2 = inputSignal2*( carrier1)
 
 #---------- Preperation BPSK Constellation Diagram ------------#
 
 amplitude = 1
 
-#Generate noise. Two sources for uncorelated noise.
-noiseStandardDeviation = 0.12
-noise1 = np.random.normal(0,noiseStandardDeviation,dataSymbols.size)
-noise2 = np.random.normal(0,noiseStandardDeviation,dataSymbols.size)
-
 #---------- Plot of amplitude modulated signal ------------#
-fig, axis = plt.subplots(3, 1)
+fig, axis = plt.subplots(4, 1)
 fig.suptitle('Modulation')
 
 axis[0].plot(t, inputSignal, color='C1')
@@ -97,8 +102,8 @@ axis[0].set_xlim(0,timeDomainVisibleLimit)
 axis[0].set_ylabel('Amplitude [V]')
 axis[0].grid(linestyle='dotted')
 
-axis[1].plot(t, carrier1, color='C2')
-axis[1].set_title('Carrier signal') # (Source Code/ Block Diagram: "carrier1")
+axis[1].plot(t, inputSignal2, color='C2')
+axis[1].set_title('NRZ signal (1ns delay)') # (Source Code/ Block Diagram: "carrier1")
 axis[1].set_xlabel('Time [s]')
 axis[1].set_xlim(0,timeDomainVisibleLimit)
 axis[1].set_ylabel('Amplitude [V]')
@@ -111,7 +116,14 @@ axis[2].set_xlim(0,timeDomainVisibleLimit)
 axis[2].set_ylabel('Amplitude [V]')
 axis[2].grid(linestyle='dotted')
 
-plt.subplots_adjust(hspace=0.6)
+axis[3].plot(t, AM_signal2, color='C2')
+axis[3].set_title('Amplitude modulated signal (1ns delay)') # (Source Code/ Block Diagram: "BPSK_signal")
+axis[3].set_xlabel('Time [s]')
+axis[3].set_xlim(0,timeDomainVisibleLimit)
+axis[3].set_ylabel('Amplitude [V]')
+axis[3].grid(linestyle='dotted')
+
+plt.subplots_adjust(hspace=0.85)
 
 
 #----- 相互相関関数の練習 -----#
@@ -119,20 +131,20 @@ plt.subplots_adjust(hspace=0.6)
 ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
 print(ACF)
 print(np.amax(ACF))
-'''
 
-ACF_normalized =  np.correlate(AM_signal, AM_signal, mode="same") / len(AM_signal)
-#ACF_normalized = ACF / np.amax(ACF)
-print(ACF_normalized)
+ACF = np.correlate(AM_signal, AM_signal2, mode='same')
+
+ACF_normalized = ACF / np.amax(ACF)
 # 正規化して最大値±１となるようにグラフを描いてみる
 
 fig, ax = plt.subplots(1, 1)
 # fig.suptitle('Auto  Correlation Function')
+print(ACF)
 ax.plot(t, ACF_normalized, color='C1')
 ax.set_xlabel('Time [s]')
 ax.set_ylabel('Intensity')
 #fig.suptitle('BPSK Modulation', fontsize=18)
 
 # ax.set_title('Magnitude Spectrum (Source Code/ Block Diagram: "BPSK_signal")')
-
+'''
 plt.show()
