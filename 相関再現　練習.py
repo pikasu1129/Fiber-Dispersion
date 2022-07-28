@@ -38,10 +38,10 @@ def GetBpskSymbol(bit1:bool):
 #-------------------------------------#
 #---------- Configuration ------------#
 #-------------------------------------#
-fs = 1 * 10 ** 12          # sampling rate
-baud = 1 * 10 ** 9          # symbol rate = bps?
+fs = 1*10**12          # sampling rate
+baud = 1*10**9         # symbol rate = bps?
 Nbits = 25                  # number of bits
-f0 = 30 * 10 ** 9          # carrier Frequency
+f0 = 30*10**9          # carrier Frequency
 Ns = int(fs/baud)           # number of Samples per Symbol
 N = Nbits * Ns              # Total Number of Samples
 t = r_[0.0:N]            # time points float64
@@ -90,28 +90,15 @@ AM_signal2 = inputSignal2*( carrier1)
 
 
 #----- 相互相関関数の練習 -----#
-'''
 ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
 print(ACF)
 print(np.amax(ACF))
 
-ACF = np.correlate(AM_signal, AM_signal2, mode='same')
+ACF = np.convolve(AM_signal, AM_signal2, mode='same')
 
 ACF_normalized = ACF / np.amax(ACF)
+#yh = sig.hilbert(ACF_normalized)
 # 正規化して最大値±１となるようにグラフを描いてみる
-
-fig, ax = plt.subplots(1, 1)
-# fig.suptitle('Auto  Correlation Function')
-print(ACF)
-ax.plot(t, ACF_normalized, color='C1')
-ax.set_xlabel('Time [s]')
-ax.set_ylabel('Intensity')
-#fig.suptitle('BPSK Modulation', fontsize=18)
-
-# ax.set_title('Magnitude Spectrum (Source Code/ Block Diagram: "BPSK_signal")')
-'''
-
-
 
 #---------- Plot of amplitude modulated signal ------------#
 fig, axis = plt.subplots(4, 1)
@@ -144,6 +131,15 @@ axis[3].set_xlabel('Time [s]')
 axis[3].set_xlim(0,timeDomainVisibleLimit)
 axis[3].set_ylabel('Amplitude [V]')
 axis[3].grid(linestyle='dotted')
+
+
+#---------- Plot of cross correlation function ------------#
+fig, ax = plt.subplots(1, 1)
+print(ACF)
+ax.plot(t, ACF_normalized, color='C1')
+ax.set_xlabel('Time [s]')
+ax.set_ylabel('Intensity')
+#fig.suptitle('Auto  Correlation Function')
 
 plt.subplots_adjust(hspace=0.85)
 
