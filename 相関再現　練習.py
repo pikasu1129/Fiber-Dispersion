@@ -97,7 +97,7 @@ print(np.amax(ACF))
 ACF = np.convolve(AM_signal, AM_signal2, mode='same')
 
 ACF_normalized = ACF / np.amax(ACF)
-yh = np.abs(sig.hilbert(ACF_normalized))
+yh = np.abs(sig.hilbert(AM_signal))
 # 正規化して最大値±１となるようにグラフを描いてみる
 
 #---------- Plot of amplitude modulated signal ------------#
@@ -137,6 +137,7 @@ axis[3].grid(linestyle='dotted')
 fig, ax = plt.subplots(1, 1)
 print(ACF)
 ax.plot(t, yh, color='C1')
+ax.plot(t, AM_signal)
 ax.set_xlabel('Time [s]')
 ax.set_ylabel('Intensity')
 #fig.suptitle('Auto  Correlation Function')
