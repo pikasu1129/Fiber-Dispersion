@@ -63,18 +63,19 @@ lowerLimit = np.maximum(0,f0-sideLobeWidthSpectrum*(1 + sideLobesToShow))
 upperLimit = f0 + sideLobeWidthSpectrum*(1 + sideLobesToShow)
 
 carrier1 = sin(2 * pi * f0 * t)
+signal = sin(2 * pi * fg * t)
 
 #----------------------------#
 #---------- BPSK ------------#
 #----------------------------#
-
+'''
 # Modulator Input
 #inputBits = np.random.randn(Nbits,1) > 0
 # 生成するbitパターンを固定化する
 inputBits = np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
 inputBits = inputBits.reshape((25,1))
 
-#はじめから1bitずらした信号を生成することで遅延を再現
+#はじめから1bitずらした信号を生成することで遅延を
 inputBits2 = np.insert(inputBits, 0, 0, axis=0)
 inputBits2 = np.delete(inputBits2, 25, 0)
 print(inputBits.shape, inputBits2.shape)
@@ -84,10 +85,11 @@ inputSignal = (np.tile(inputBits,(1,Ns))).ravel()
 inputSignal2 = (np.tile(inputBits2,(1,Ns))).ravel()
 
 print(inputSignal.shape, inputSignal2.shape)
+'''
 
 #Multiplicator / mixxer
-AM_signal = inputSignal*( carrier1)# + intermodulation1+ intermodulation2)
-AM_signal2 = inputSignal2*( carrier1)
+AM_signal = (signal)*cos(2*pi*f0*t)
+#AM_signal2 = inputSignal2*( carrier1)
 
 
 #----- 相互相関関数の練習 -----#
@@ -95,24 +97,27 @@ ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸�
 print(ACF)
 print(np.amax(ACF))
 
+'''
 ACF = np.convolve(AM_signal, AM_signal2, mode='same')
 
 ACF_normalized = ACF / np.amax(ACF)
+'''
+
 yh = np.abs(sig.hilbert(AM_signal))
 # 正規化して最大値±１となるようにグラフを描いてみる
 
 #---------- Plot of amplitude modulated signal ------------#
-fig, axis = plt.subplots(4, 1)
+fig, axis = plt.subplots(3, 1)
 fig.suptitle('Modulation')
 
-axis[0].plot(t, inputSignal, color='C1')
+axis[0].plot(t, signal, color='C1')
 axis[0].set_title('NRZ signal') # (Source Code/ Block Diagram: "inputSignal")
 axis[0].set_xlabel('Time [s]')
 axis[0].set_xlim(0,timeDomainVisibleLimit)
 axis[0].set_ylabel('Amplitude [V]')
 axis[0].grid(linestyle='dotted')
 
-axis[1].plot(t, inputSignal2, color='C2')
+axis[1].plot(t, carrier1, color='C2')
 axis[1].set_title('NRZ signal (1ns delay)') # (Source Code/ Block Diagram: "carrier1")
 axis[1].set_xlabel('Time [s]')
 axis[1].set_xlim(0,timeDomainVisibleLimit)
@@ -126,22 +131,23 @@ axis[2].set_xlim(0,timeDomainVisibleLimit)
 axis[2].set_ylabel('Amplitude [V]')
 axis[2].grid(linestyle='dotted')
 
+'''
 axis[3].plot(t, AM_signal2, color='C2')
 axis[3].set_title('Amplitude modulated signal (1ns delay)') # (Source Code/ Block Diagram: "BPSK_signal")
 axis[3].set_xlabel('Time [s]')
 axis[3].set_xlim(0,timeDomainVisibleLimit)
 axis[3].set_ylabel('Amplitude [V]')
 axis[3].grid(linestyle='dotted')
-
+'''
 
 #---------- Plot of cross correlation function ------------#
 fig, ax = plt.subplots(1, 1)
-print(ACF)
-ax.plot(t, yh, color='C1')
+ax.plot(t, ACF, color='C1')
 ax.plot(t, AM_signal)
 ax.set_xlabel('Time [s]')
 ax.set_ylabel('Intensity')
 #fig.suptitle('Auto  Correlation Function')
+
 
 plt.subplots_adjust(hspace=0.85)
 
