@@ -88,14 +88,14 @@ print(inputSignal.shape, inputSignal2.shape)
 '''
 
 #Multiplicator / mixxer
-AM_signal = (signal)*cos(2*pi*f0*t)
+AM_signal = (1 + 0.5*signal)*cos(2*pi*f0*t)
 #AM_signal2 = inputSignal2*( carrier1)
 
 
-#----- 相互相関関数の練習 -----#
-ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
-print(ACF)
-print(np.amax(ACF))
+#----- 相互相関関数or畳み込みの練習 -----#
+CONV = np.convolve(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
+CONV_normalized = CONV / np.max(CONV)
+# 1ns遅延を与えてみる
 
 '''
 ACF = np.convolve(AM_signal, AM_signal2, mode='same')
@@ -103,7 +103,7 @@ ACF = np.convolve(AM_signal, AM_signal2, mode='same')
 ACF_normalized = ACF / np.amax(ACF)
 '''
 
-yh = np.abs(sig.hilbert(AM_signal))
+#yh = np.abs(sig.hilbert(AM_signal))
 # 正規化して最大値±１となるようにグラフを描いてみる
 
 #---------- Plot of amplitude modulated signal ------------#
@@ -111,14 +111,14 @@ fig, axis = plt.subplots(3, 1)
 fig.suptitle('Modulation')
 
 axis[0].plot(t, signal, color='C1')
-axis[0].set_title('NRZ signal') # (Source Code/ Block Diagram: "inputSignal")
+axis[0].set_title('signal') # (Source Code/ Block Diagram: "inputSignal")
 axis[0].set_xlabel('Time [s]')
 axis[0].set_xlim(0,timeDomainVisibleLimit)
 axis[0].set_ylabel('Amplitude [V]')
 axis[0].grid(linestyle='dotted')
 
 axis[1].plot(t, carrier1, color='C2')
-axis[1].set_title('NRZ signal (1ns delay)') # (Source Code/ Block Diagram: "carrier1")
+axis[1].set_title('carrier signal (1ns delay)') # (Source Code/ Block Diagram: "carrier1")
 axis[1].set_xlabel('Time [s]')
 axis[1].set_xlim(0,timeDomainVisibleLimit)
 axis[1].set_ylabel('Amplitude [V]')
@@ -142,8 +142,8 @@ axis[3].grid(linestyle='dotted')
 
 #---------- Plot of cross correlation function ------------#
 fig, ax = plt.subplots(1, 1)
-ax.plot(t, ACF, color='C1')
-ax.plot(t, AM_signal)
+ax.plot(t, CONV_normalized, color='C1')
+#ax.plot(t, AM_signal)
 ax.set_xlabel('Time [s]')
 ax.set_ylabel('Intensity')
 #fig.suptitle('Auto  Correlation Function')

@@ -40,9 +40,9 @@ def GetBpskSymbol(bit1:bool):
 #-------------------------------------#
 fs = 1*10**12          # sampling rate
 baud = 1*10**9         # symbol rate = bps?
-Nbits = 25                  # number of bits
+Nbits = 25             # number of bits
 f0 = 30*10**9          # carrier Frequency
-fg = 1*10**9          # 情報信号の繰り返し周波数
+fg = 1*10**9           # 情報信号の繰り返し周波数
 Ns = int(fs/baud)           # number of Samples per Symbol
 N = Nbits * Ns              # Total Number of Samples
 t = r_[0.0:N]            # time points float64
@@ -71,7 +71,7 @@ carrier1 = sin(2 * pi * f0 * t)
 # Modulator Input
 #inputBits = np.random.randn(Nbits,1) > 0
 # 生成するbitパターンを固定化する
-inputBits = np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
+inputBits = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
 inputBits = inputBits.reshape((25,1))
 
 #はじめから1bitずらした信号を生成することで遅延を再現
@@ -95,10 +95,12 @@ ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸�
 print(ACF)
 print(np.amax(ACF))
 
-ACF = np.convolve(AM_signal, AM_signal2, mode='same')
+CONV = np.convolve(AM_signal, AM_signal2, mode='same')
 
 ACF_normalized = ACF / np.amax(ACF)
-yh = np.abs(sig.hilbert(AM_signal))
+CONV_normalized = CONV / np.max(CONV)
+#yh = np.abs(sig.hilbert(AM_signal))
+
 # 正規化して最大値±１となるようにグラフを描いてみる
 
 #---------- Plot of amplitude modulated signal ------------#
@@ -135,13 +137,19 @@ axis[3].grid(linestyle='dotted')
 
 
 #---------- Plot of cross correlation function ------------#
-fig, ax = plt.subplots(1, 1)
-print(ACF)
-ax.plot(t, yh, color='C1')
-ax.plot(t, AM_signal)
-ax.set_xlabel('Time [s]')
+fig = plt.figure()
+ax = fig.add_subplot(211)
+ax.plot(t, ACF_normalized, color='C1')
+#ax.set_xlabel('Time [s]')
 ax.set_ylabel('Intensity')
+ax.set_title('Auto correlation function')
 #fig.suptitle('Auto  Correlation Function')
+
+ax2 = fig.add_subplot(212)
+ax2.plot(t, CONV_normalized, color='C1')
+ax2.set_xlabel('Time [s]')
+ax2.set_ylabel('Intensity')
+ax2.set_title('Convolution')
 
 plt.subplots_adjust(hspace=0.85)
 
