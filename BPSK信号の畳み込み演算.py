@@ -24,7 +24,7 @@ from scipy.io.wavfile import read as wavread
 from sympy import E, I, NDimArray
 
 # 強度変調信号の生成
-plt.rcParams["font.size"] = 12
+plt.rcParams["font.size"] = 14
 
 # Used for symbol creation. Returns a decimal number from a 1 bit input
 def GetBpskSymbol(bit1:bool):
@@ -71,7 +71,7 @@ carrier1 = sin(2 * pi * f0 * t)
 # Modulator Input
 #inputBits = np.random.randn(Nbits,1) > 0
 # 生成するbitパターンを固定化する
-inputBits = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
+inputBits = np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]) > 0
 inputBits = inputBits.reshape((25,1))
 
 #はじめから1bitずらした信号を生成することで遅延を再現
@@ -80,8 +80,8 @@ inputBits2 = np.delete(inputBits2, 25, 0)
 print(inputBits.shape, inputBits2.shape)
 
 #Digital-to-Analog Conversion
-inputSignal = (np.tile(inputBits,(1,Ns))).ravel()
-inputSignal2 = (np.tile(inputBits2,(1,Ns))).ravel()
+inputSignal = (np.tile(inputBits*2-1,(1,Ns))).ravel()
+inputSignal2 = (np.tile(inputBits2*2-1,(1,Ns))).ravel()
 
 print(inputSignal.shape, inputSignal2.shape)
 
@@ -90,23 +90,19 @@ AM_signal = inputSignal*( carrier1)# + intermodulation1+ intermodulation2)
 AM_signal2 = inputSignal2*( carrier1)
 
 
-#----- 相互相関関数の練習 -----#
-ACF = np.correlate(AM_signal, AM_signal, mode="same") # fullにして時間軸をlen(ACF)にしてみる
-print(ACF)
-print(np.amax(ACF))
-
-CONV = np.convolve(AM_signal, AM_signal2, mode='same')
-
-ACF_normalized = ACF / np.amax(ACF)
+#----- 畳み込み演算 -----#
+CONV = sig.convolve(AM_signal, AM_signal2, mode='same', method='fft')
 CONV_normalized = CONV / np.max(CONV)
 #yh = np.abs(sig.hilbert(AM_signal))
 
-# 正規化して最大値±１となるようにグラフを描いてみる
+#----- 乗算（multiplication ） -----#
+Multiple = AM_signal * AM_signal2
+Multiple_normalized = Multiple / np.max(Multiple)
+
 
 #---------- Plot of amplitude modulated signal ------------#
-fig, axis = plt.subplots(4, 1)
-fig.suptitle('Modulation')
-plt.subplots_adjust(hspace=0.75)
+fig, axis = plt.subplots(5, 1)
+fig.suptitle('BPSK Modulation')
 
 axis[0].plot(t, inputSignal, color='C1')
 axis[0].set_title('NRZ signal') # (Source Code/ Block Diagram: "inputSignal")
@@ -115,42 +111,43 @@ axis[0].set_xlim(0,timeDomainVisibleLimit)
 axis[0].set_ylabel('Amplitude [V]')
 axis[0].grid(linestyle='dotted')
 
+'''
 axis[1].plot(t, inputSignal2, color='C2')
 axis[1].set_title('NRZ signal (1ns delay)') # (Source Code/ Block Diagram: "carrier1")
 axis[1].set_xlabel('Time [s]')
 axis[1].set_xlim(0,timeDomainVisibleLimit)
 axis[1].set_ylabel('Amplitude [V]')
 axis[1].grid(linestyle='dotted')
+'''
 
-axis[2].plot(t,AM_signal, color='C3')
-axis[2].set_title('Amplitude modulated signal') # (Source Code/ Block Diagram: "BPSK_signal")
+
+axis[1].plot(t,AM_signal, color='C3')
+axis[1].set_title('BPSK signal') # (Source Code/ Block Diagram: "BPSK_signal")
+axis[1].set_xlabel('Time [s]')
+axis[1].set_xlim(0,timeDomainVisibleLimit)
+axis[1].set_ylabel('Amplitude [V]')
+axis[1].grid(linestyle='dotted')
+
+axis[2].plot(t, AM_signal2, color='C2')
+axis[2].set_title('BPSK signal (1ns delay)') # (Source Code/ Block Diagram: "BPSK_signal")
 axis[2].set_xlabel('Time [s]')
 axis[2].set_xlim(0,timeDomainVisibleLimit)
 axis[2].set_ylabel('Amplitude [V]')
 axis[2].grid(linestyle='dotted')
 
-axis[3].plot(t, AM_signal2, color='C2')
-axis[3].set_title('Amplitude modulated signal (1ns delay)') # (Source Code/ Block Diagram: "BPSK_signal")
+axis[3].plot(t, CONV_normalized, color='C4')
 axis[3].set_xlabel('Time [s]')
 axis[3].set_xlim(0,timeDomainVisibleLimit)
-axis[3].set_ylabel('Amplitude [V]')
+axis[3].set_ylabel('Intensity')
+axis[3].set_title('Convolution')
 axis[3].grid(linestyle='dotted')
 
-
-#---------- Plot of cross correlation function ------------#
-fig = plt.figure()
-ax = fig.add_subplot(211)
-ax.plot(t, ACF_normalized, color='C1')
-#ax.set_xlabel('Time [s]')
-ax.set_ylabel('Intensity')
-ax.set_title('Auto correlation function')
-#fig.suptitle('Auto  Correlation Function')
-
-ax2 = fig.add_subplot(212)
-ax2.plot(t, CONV_normalized, color='C1')
-ax2.set_xlabel('Time [s]')
-ax2.set_ylabel('Intensity')
-ax2.set_title('Convolution')
+axis[4].plot(t, Multiple_normalized, color='C4')
+axis[4].set_xlabel('Time [s]')
+axis[4].set_xlim(0,timeDomainVisibleLimit)
+axis[4].set_ylabel('Intensity')
+axis[4].set_title('Multiplication')
+axis[4].grid(linestyle='dotted')
 
 plt.subplots_adjust(hspace=0.85)
 
